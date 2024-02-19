@@ -164,7 +164,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		}
 
 //Posiciones inicial y final del recorrido
-		celdaInicial = new Vector2(0, 3);
+		celdaInicial = new Vector2(0, 2);
 		celdaFinal = new Vector2(24, 1);
 
 		//Inicializamos la cámara del juego
@@ -190,7 +190,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 //Creamos el objeto SpriteBatch que nos permitirá crear animaciones dentro del método render()
 		sb = new SpriteBatch();
 		//Tile Inicial y Final
-		celdaInicial = new Vector2(3, 0);
+		celdaInicial = new Vector2(0, 2);
 		celdaFinal = new Vector2(24, 1); //el tile final en el mapa de ejemplo
 
 //Creamos las distintas animaciones en bucle, teniendo en cuenta que el timepo entre frames será 150 milisegundos
@@ -272,7 +272,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//RECORRIDO DE LOS NPC. Indicamos las baldosas de inicio y fin de su recorrido y  usamos
 		//la funcion posicionaMapa para traducirlo a puntos del mapa.
 		origen[0] = posicionaMapa(new Vector2(5, 17));
-		destino[0] = posicionaMapa(new Vector2(5, 3));
+		destino[0] = posicionaMapa(new Vector2(5, 2));
 		origen[1] = posicionaMapa(new Vector2(26, 18));
 		destino[1] = posicionaMapa(new Vector2(26, 3));
 		//POSICION INICIAL DE LOS NPC
@@ -358,9 +358,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		imgNPC[0].dispose();
 		imgNPC[1].dispose();
-		imgNPC[2].dispose();
+		/*imgNPC[2].dispose();
 		imgNPC[3].dispose();
-		imgNPC[4].dispose();
+		imgNPC[4].dispose();*/
 	}
 
 	private Vector2 posicionaMapa(Vector2 celda) {
