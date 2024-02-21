@@ -293,7 +293,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//la funcion posicionaMapa para traducirlo a puntos del mapa.
 		origen[0] = posicionaMapa(new Vector2(5, 17));
 		destino[0] = posicionaMapa(new Vector2(5, 2));
-		origen[1] = posicionaMapa(new Vector2(26, 18));
+		origen[1] = posicionaMapa(new Vector2(26, 17));
 		destino[1] = posicionaMapa(new Vector2(26, 3));
 		//POSICION INICIAL DE LOS NPC
 		for (int i = 0; i < numeroNPC; i++) {
@@ -386,13 +386,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Pintamos la capa de profundidad del mapa de baldosas.
 		capas = new int[1];
 		capas[0] = 4; //Número de la capa de profundidad
-
+		mapaRenderer.render(capas);
 		fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
 		fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
 		//Finalizamos el objeto SpriteBatch
 		sb.end();
-
-		mapaRenderer.render(capas);
 
 
 
