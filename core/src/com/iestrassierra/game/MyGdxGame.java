@@ -4,6 +4,8 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,6 +18,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -49,7 +52,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	private float anchuraPantalla, alturaPantalla;
 
 	// Este atributo indica el tiempo en segundos transcurridos desde que se inicia la animación,
-// servirá para determinar qué frame se debe representar
+	// servirá para determinar qué frame se debe representar
 	private float stateTime;
 
 	//Booleanos que determinan la dirección de marcha del sprite
@@ -115,6 +118,16 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	//Velocidad de desplazamiento de los NPC
 	private float velocidadNPC;
 
+	//Elementos para la musica
+	private Music musicaJuego;
+	//Elementos para los sonidos
+	private Sound tesoroEncontrado;
+	//private Sound pillado;
+	//private Sound fracaso;
+	//private Sound exito;
+
+	private Sound pasos;
+	private int cycle, cycle_ant;
 	@Override
 	public void create () {
 		//Cargamos el mapa de baldosas desde la carpeta de assets
@@ -127,30 +140,30 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//ancho, da como resultado el alto y ancho en pixeles del mapa.
 		TiledMapTileLayer capa = (TiledMapTileLayer) mapa.getLayers().get(0);
 
-//Determinamos el ancho y alto de cada celda
+		//Determinamos el ancho y alto de cada celda
 		anchoCelda = (int) capa.getTileWidth();
 		altoCelda = (int) capa.getTileHeight();
 
-//Determinamos el ancho y alto del mapa completo
+		//Determinamos el ancho y alto del mapa completo
 		anchoMapa = capa.getWidth() * anchoCelda;
 		altoMapa = capa.getHeight() * altoCelda;
 
-//Cargamos las capas de los obstáculos y las de los pasos en el TiledMap.
+		//Cargamos las capas de los obstáculos y las de los pasos en el TiledMap.
 		TiledMapTileLayer capaSuelo = (TiledMapTileLayer) mapa.getLayers().get(0);
 		TiledMapTileLayer capaObstaculos = (TiledMapTileLayer) mapa.getLayers().get(1);
 		TiledMapTileLayer capaPasos = (TiledMapTileLayer) mapa.getLayers().get(2);
 		capaTesoros = (TiledMapTileLayer) mapa.getLayers().get(3);
 		TiledMapTileLayer capaProfundidad = (TiledMapTileLayer) mapa.getLayers().get(4);
 
-//El numero de tiles es igual en todas las capas. Lo tomamos de la capa Suelo
+		//El numero de tiles es igual en todas las capas. Lo tomamos de la capa Suelo
 		anchoTiles = capaSuelo.getWidth();
 		altoTiles = capaSuelo.getHeight();
 
-//Creamos un array bidimensional de booleanos para obstáculos y tesoros
+		//Creamos un array bidimensional de booleanos para obstáculos y tesoros
 		obstaculo = new boolean[anchoTiles][altoTiles];
 		tesoro = new boolean[anchoTiles][altoTiles];
 
-//Rellenamos los valores recorriendo el mapa
+		//Rellenamos los valores recorriendo el mapa
 		for (int x = 0; x < anchoTiles; x++) {
 			for (int y = 0; y < altoTiles; y++) {
 				//rellenamos el array bidimensional de los obstaculos
@@ -163,37 +176,37 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			}
 		}
 
-//Posiciones inicial y final del recorrido
-		celdaInicial = new Vector2(0, 2);
+		//Posiciones inicial y final del recorrido
+		celdaInicial = new Vector2(16, 16);
 		celdaFinal = new Vector2(24, 1);
 
 		//Inicializamos la cámara del juego
 		anchuraPantalla = Gdx.graphics.getWidth();
 		alturaPantalla = Gdx.graphics.getHeight();
 
-//Creamos una cámara que mostrará una zona del mapa (igual en todas las plataformas)
+		//Creamos una cámara que mostrará una zona del mapa (igual en todas las plataformas)
 		int anchoCamara = 400, altoCamara = 240;
 		camara = new OrthographicCamera(anchoCamara, altoCamara);
 
-//Actualizamos la posición de la cámara
+		//Actualizamos la posición de la cámara
 		camara.update();
 		posicionJugador = new Vector2(posicionaMapa(celdaInicial));
 
 		//Ponemos a cero el atributo stateTime, que marca el tiempo de ejecución de la animación del personaje principal
 		stateTime = 0f;
-//Cargamos la imagen del personaje principal en el objeto img de la clase Texture
+		//Cargamos la imagen del personaje principal en el objeto img de la clase Texture
 		imagenPrincipal = new Texture(Gdx.files.internal("sprite/personajes/personaje2.png"));
 
-//Sacamos los frames de img en un array bidimensional de TextureRegion
+		//Sacamos los frames de img en un array bidimensional de TextureRegion
 		TextureRegion[][] tmp = TextureRegion.split(imagenPrincipal, imagenPrincipal.getWidth() / FRAME_COLS, imagenPrincipal.getHeight() / FRAME_ROWS);
 
-//Creamos el objeto SpriteBatch que nos permitirá crear animaciones dentro del método render()
+		//Creamos el objeto SpriteBatch que nos permitirá crear animaciones dentro del método render()
 		sb = new SpriteBatch();
 		//Tile Inicial y Final
 		celdaInicial = new Vector2(0, 2);
 		celdaFinal = new Vector2(24, 1); //el tile final en el mapa de ejemplo
 
-//Creamos las distintas animaciones en bucle, teniendo en cuenta que el timepo entre frames será 150 milisegundos
+		//Creamos las distintas animaciones en bucle, teniendo en cuenta que el timepo entre frames será 150 milisegundos
 
 		float frameJugador = 0.15f;
 
@@ -206,49 +219,49 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		jugadorArriba = new Animation<>(frameJugador, tmp[3]); //Fila 3, dirección arriba
 		jugadorArriba.setPlayMode(Animation.PlayMode.LOOP);
 
-//En principio se utiliza la animación en la dirección abajo
+		//En principio se utiliza la animación en la dirección abajo
 		jugador = jugadorAbajo;
 
-//Dimensiones del jugador
+		//Dimensiones del jugador
 		anchoJugador = tmp[0][0].getRegionWidth();
 		altoJugador = tmp[0][0].getRegionHeight();
-//Variable para contar los tesoros recogidos
+		//Variable para contar los tesoros recogidos
 		cuentaTesoros = 0;
 
-//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-		velocidadJugador = 0.75f;
+		//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
+		velocidadJugador = 1.25f;
 
 		//Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
 		stateTimeNPC = 0f;
 
-//Velocidad de los NPC
-		velocidadNPC = 0.75f; //Vale cualquier múltiplo de 0.25f
-//Creamos arrays de animaciones para los NPC
-//Las animaciones activas
+		//Velocidad de los NPC
+		velocidadNPC = 1.5f; //Vale cualquier múltiplo de 0.25f
+		//Creamos arrays de animaciones para los NPC
+		//Las animaciones activas
 		npc = new Animation[numeroNPC];
 
-//Las animaciones direccionales
+		//Las animaciones direccionales
 		npcAbajo = new Animation[numeroNPC];
 		npcIzquierda = new Animation[numeroNPC];
 		npcDerecha = new Animation[numeroNPC];
 		npcArriba = new Animation[numeroNPC];
 
-//Posiciones actuales, origen y destino de los npc
+		//Posiciones actuales, origen y destino de los npc
 		posicionNPC = new Vector2[numeroNPC];
 		origen = new Vector2[numeroNPC];
 		destino = new Vector2[numeroNPC];
 
-//Creamos los arrays (filas) de imágenes para cada npc extrayéndolos
-//de las imágenes png de los distintos sprites
+		//Creamos los arrays (filas) de imágenes para cada npc extrayéndolos
+		//de las imágenes png de los distintos sprites
 
-//Array de imágenes para cada npc
+		//Array de imágenes para cada npc
 		imgNPC = new Texture[numeroNPC];
 
-//Imágenes de cada npc
+		//Imágenes de cada npc
 		imgNPC[0] = new Texture(Gdx.files.internal("sprite/npc/villano1.png"));
 		imgNPC[1] = new Texture(Gdx.files.internal("sprite/npc/villano2.png"));
 
-//Extraemos los frames de cada imagen en tmp[][]
+		//Extraemos los frames de cada imagen en tmp[][]
 		for (int i = 0; i < numeroNPC; i++) {
 			//Sacamos los frames de img en un array de TextureRegion
 			tmp = TextureRegion.split(imgNPC[i], imgNPC[i].getWidth() / FRAME_COLS, imgNPC[i].getHeight() / FRAME_ROWS);
@@ -281,6 +294,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			posicionNPC[i].set(origen[i]);
 		}
 
+		//Inicializamos la musica de fondo del juego
+		musicaJuego = Gdx.audio.newMusic(Gdx.files.internal("music/fondo_Legendary_Wings.mp3"));
+		musicaJuego.setLooping(true);
+
+		//Inicializamos los sonidos
+		tesoroEncontrado = Gdx.audio.newSound(Gdx.files.internal("music/item.mp3"));
+		//pillado = Gdx.audio.newSound(Gdx.files.internal("music/lose_music.mp3"));
+		//fracaso = Gdx.audio.newSound(Gdx.files.internal("music/fin.mp3"));
+		//exito = Gdx.audio.newSound(Gdx.files.internal("music/exito.mp3"));
+
+		//Sonido de pasos
+		pasos = Gdx.audio.newSound(Gdx.files.internal("music/running-1-6846.mp3"));
+		cycle = 0;
+		cycle_ant = 0;//Sirven para controlar los ciclos de reproduccion del sonido pasos
 	}
 
 	@Override
@@ -290,7 +317,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Centramos la camara en el jugador principal
 		camara.position.set(posicionJugador, 0);
 
-//Comprobamos que la cámara no se salga de los límites del mapa de baldosas con el método MathUtils.clamp
+		//Comprobamos que la cámara no se salga de los límites del mapa de baldosas con el método MathUtils.clamp
 		camara.position.x = MathUtils.clamp(camara.position.x,
 				camara.viewportWidth / 2f,
 				anchoMapa - camara.viewportWidth / 2f);
@@ -298,42 +325,42 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				camara.viewportHeight / 2f,
 				altoMapa - camara.viewportHeight / 2f);
 
-//Actualizamos la cámara del juego
+		//Actualizamos la cámara del juego
 		camara.update();
-//Vinculamos el objeto que dibuja el mapa con la cámara del juego
+		//Vinculamos el objeto que dibuja el mapa con la cámara del juego
 		mapaRenderer.setView(camara);
 
 
 		//Para borrar la pantalla
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-//Vinculamos el objeto que dibuja el mapa con la cámara del juego
+		//Vinculamos el objeto que dibuja el mapa con la cámara del juego
 		mapaRenderer.setView(camara);
 
-//Dibujamos las capas del mapa
-//Posteriormente quitaremos la capa de profundidad para intercalar a los personajes
-		int[] capas = {0, 1, 2, 3, 4};
+		//Dibujamos las capas del mapa
+		//Posteriormente quitaremos la capa de profundidad para intercalar a los personajes
+		int[] capas = {0, 1, 2, 3};
 		mapaRenderer.render(capas);
 
 		//ANIMACION DEL JUGADOR
 
-//En este método actualizaremos la posición del jugador principal
+		//En este método actualizaremos la posición del jugador principal
 		actualizaPosicionJugador();
 
-// Indicamos al SpriteBatch que se muestre en el sistema de coordenadas específicas de la cámara.
+		// Indicamos al SpriteBatch que se muestre en el sistema de coordenadas específicas de la cámara.
 		sb.setProjectionMatrix(camara.combined);
 
-//Inicializamos el objeto SpriteBatch
+		//Inicializamos el objeto SpriteBatch
 		sb.begin();
 
-//cuadroActual contendrá el frame que se va a mostrar en cada momento.
+		//cuadroActual contendrá el frame que se va a mostrar en cada momento.
 		TextureRegion cuadroActual = jugador.getKeyFrame(stateTime);
 		sb.draw(cuadroActual, posicionJugador.x, posicionJugador.y);
 
-//Pintamos la capa de profundidad del mapa de baldosas.
-		capas = new int[1];
-		capas[0] = 4; //Número de la capa de profundidad
-		mapaRenderer.render(capas);
+
+		//Deteccion de colisiones con NPC
+		detectaColisiones();
+
 		//Dibujamos las animaciones de los NPC
 		for (int i = 0; i < numeroNPC; i++) {
 			actualizaPosicionNPC(i);
@@ -341,9 +368,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			sb.draw(cuadroActual, posicionNPC[i].x, posicionNPC[i].y);
 		}
 
-//Finalizamos el objeto SpriteBatch
+
+		//Finalizamos el objeto SpriteBatch
 		sb.end();
+
+		//Pintamos la capa de profundidad del mapa de baldosas.
+		capas = new int[1];
+		capas[0] = 4; //Número de la capa de profundidad
+
+		mapaRenderer.render(capas);
 		stateTimeNPC += Gdx.graphics.getDeltaTime();
+
+		//Reproducimos la musica del juego
+		if (!musicaJuego.isPlaying())
+			musicaJuego.play();
 	}
 	
 	@Override
@@ -361,6 +399,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		/*imgNPC[2].dispose();
 		imgNPC[3].dispose();
 		imgNPC[4].dispose();*/
+
+		//Music
+		musicaJuego.dispose();
+		pasos.dispose();
 	}
 
 	private Vector2 posicionaMapa(Vector2 celda) {
@@ -404,6 +446,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Avanzamos el stateTime del jugador principal cuando hay algún estado de movimiento activo
 		if (izquierda || derecha || arriba || abajo) {
 			stateTime += Gdx.graphics.getDeltaTime();
+			cycle = (int) (stateTime / 0.6f);
+			if (cycle != cycle_ant)
+				pasos.play(0.5f);
+			cycle_ant = cycle;
 		}
 
 		//Limites en el mapa para el jugador
@@ -436,12 +482,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			TiledMapTileLayer.Cell celda = capaTesoros.getCell(limIzq, limInf);
 			celda.setTile(null);
 			tesoro[limIzq][limInf] = false;
+			tesoroEncontrado.play();
 			cuentaTesoros++;
 		} //Límite superior derecho
 		else if (tesoro[limDrcha][limSup]) {
 			TiledMapTileLayer.Cell celda = capaTesoros.getCell(limDrcha, limSup);
 			celda.setTile(null);
 			tesoro[limDrcha][limSup] = false;
+			tesoroEncontrado.play();
 			cuentaTesoros++;
 		}
 	}
@@ -563,6 +611,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		return true;
 	}
 
+
+
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		//mismo caso que touchDown
@@ -615,4 +665,27 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			origen[i].set(posicionNPC[i]);
 		}
 	}
+
+	//Método que detecta si se producen colisiones usando rectángulos
+	private void detectaColisiones() {
+		//Vamos a comprobar que el rectángulo de contacto del jugador
+		//no se solape con el rectángulo de contacto del npc
+		Rectangle rJugador = new Rectangle((float) (posicionJugador.x + 0.25 * anchoJugador), (float) (posicionJugador.y + 0.25 * altoJugador),
+				(float) (0.5 * anchoJugador), (float) (0.5 * altoJugador));
+		Rectangle rNPC;
+		//Ahora recorremos el array de NPC, para cada uno generamos su rectángulo de contacto
+		for (int i = 0; i < numeroNPC; i++) {
+			rNPC = new Rectangle((float) (posicionNPC[i].x + 0.1 * anchoJugador), (float) (posicionNPC[i].y + 0.1 * altoJugador),
+					(float) (0.8 * anchoJugador), (float) (0.8 * altoJugador));
+			//Si hay colision
+			if (rJugador.overlaps(rNPC)) {
+				//Código de fin de partida
+				System.out.println("Fin de la partida");
+				posicionJugador.set(posicionaMapa(celdaInicial));
+				return; //Acabamos el bucle si hay una sola colisión
+			}
+		}//Si no hay colisión no se hace nada
+	}
+
 }
+
