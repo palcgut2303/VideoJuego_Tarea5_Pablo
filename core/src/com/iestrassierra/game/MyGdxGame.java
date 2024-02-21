@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -126,6 +127,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	//private Sound fracaso;
 	//private Sound exito;
 
+	//Elementos para sobreimpresionar informacion
+	private BitmapFont fontVidas;
+	private BitmapFont fontTesoros;
+	//Numero de vidas del jugador
+	private int nVidas;
+
 	private Sound pasos;
 	private int cycle, cycle_ant;
 	@Override
@@ -177,8 +184,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		}
 
 		//Posiciones inicial y final del recorrido
-		celdaInicial = new Vector2(16, 16);
-		celdaFinal = new Vector2(24, 1);
+		celdaInicial = new Vector2(0, 2);
+		celdaFinal = new Vector2(28, 2);
 
 		//Inicializamos la cámara del juego
 		anchuraPantalla = Gdx.graphics.getWidth();
@@ -204,7 +211,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		sb = new SpriteBatch();
 		//Tile Inicial y Final
 		celdaInicial = new Vector2(0, 2);
-		celdaFinal = new Vector2(24, 1); //el tile final en el mapa de ejemplo
+		celdaFinal = new Vector2(28, 2); //el tile final en el mapa de ejemplo
 
 		//Creamos las distintas animaciones en bucle, teniendo en cuenta que el timepo entre frames será 150 milisegundos
 
@@ -229,13 +236,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		cuentaTesoros = 0;
 
 		//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-		velocidadJugador = 1.25f;
+		velocidadJugador = 0.75f;
 
 		//Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
 		stateTimeNPC = 0f;
 
 		//Velocidad de los NPC
-		velocidadNPC = 1.5f; //Vale cualquier múltiplo de 0.25f
+		velocidadNPC = 1.00f; //Vale cualquier múltiplo de 0.25f
 		//Creamos arrays de animaciones para los NPC
 		//Las animaciones activas
 		npc = new Animation[numeroNPC];
@@ -308,6 +315,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		pasos = Gdx.audio.newSound(Gdx.files.internal("music/running-1-6846.mp3"));
 		cycle = 0;
 		cycle_ant = 0;//Sirven para controlar los ciclos de reproduccion del sonido pasos
+
+		//Textos sobreimpresionados
+		fontVidas = new BitmapFont(Gdx.files.internal("ui/font.fnt"));
+		fontTesoros = new BitmapFont(Gdx.files.internal("ui/font.fnt"));
+
+		cuentaTesoros = 0;
+		nVidas = 3;
 	}
 
 	@Override
@@ -349,6 +363,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		// Indicamos al SpriteBatch que se muestre en el sistema de coordenadas específicas de la cámara.
 		sb.setProjectionMatrix(camara.combined);
+		String infoTesoros = "Tesoros: " + cuentaTesoros;
+		String infoVidas = "Vidas: " + nVidas;
 
 		//Inicializamos el objeto SpriteBatch
 		sb.begin();
@@ -367,16 +383,19 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			cuadroActual = (TextureRegion) npc[i].getKeyFrame(stateTimeNPC);
 			sb.draw(cuadroActual, posicionNPC[i].x, posicionNPC[i].y);
 		}
-
-
-		//Finalizamos el objeto SpriteBatch
-		sb.end();
-
 		//Pintamos la capa de profundidad del mapa de baldosas.
 		capas = new int[1];
 		capas[0] = 4; //Número de la capa de profundidad
 
+		fontTesoros.draw(sb, infoTesoros, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 60);
+		fontVidas.draw(sb, infoVidas, camara.position.x - camara.viewportWidth / 2, camara.position.y - camara.viewportHeight / 2 + 30);
+		//Finalizamos el objeto SpriteBatch
+		sb.end();
+
 		mapaRenderer.render(capas);
+
+
+
 		stateTimeNPC += Gdx.graphics.getDeltaTime();
 
 		//Reproducimos la musica del juego
@@ -403,6 +422,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Music
 		musicaJuego.dispose();
 		pasos.dispose();
+
+		//Elementos para sobreimpresionar informacion
+		fontVidas.dispose();
+		fontTesoros.dispose();
 	}
 
 	private Vector2 posicionaMapa(Vector2 celda) {
@@ -680,9 +703,17 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			//Si hay colision
 			if (rJugador.overlaps(rNPC)) {
 				//Código de fin de partida
-				System.out.println("Fin de la partida");
-				posicionJugador.set(posicionaMapa(celdaInicial));
-				return; //Acabamos el bucle si hay una sola colisión
+				if(nVidas == 1){
+					System.out.println("Fin de la partida.");
+					nVidas = 0;
+					posicionJugador.set(posicionaMapa(celdaFinal));
+					return; //Acabamos el bucle si hay una sola colisión
+				}else{
+					nVidas = nVidas -1;
+					posicionJugador.set(posicionaMapa(celdaInicial));
+					return; //Acabamos el bucle si hay una sola colisión
+				}
+
 			}
 		}//Si no hay colisión no se hace nada
 	}
