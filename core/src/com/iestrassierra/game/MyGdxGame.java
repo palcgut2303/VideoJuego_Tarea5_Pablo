@@ -103,6 +103,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	//Array de animaciones activas de los npc
 	private Animation[] npc;
 
+	private boolean mostrarTexto = true;
+
 	//Array de animaciones de los NPC para cada dirección
 	private Animation[] npcArriba;
 	private Animation[] npcDerecha;
@@ -110,9 +112,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	private Animation[] npcIzquierda;
 
 	//Numero de NPC que hay en el juego
-	private static final int numeroNPC = 2;
+	private static final int numeroNPC = 5;
 	//Posiciones de los NPC
 	private Vector2[] posicionNPC;
+
+	private float tiempoMostrandoTexto = 0f;
 	//Posiciones iniciales
 	private Vector2[] origen;
 	//Posiciones finales
@@ -124,7 +128,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	private Music musicaJuego;
 	//Elementos para los sonidos
 	private Sound tesoroEncontrado;
-	//private Sound pillado;
+	private Sound pillado;
 	//private Sound fracaso;
 	//private Sound exito;
 
@@ -134,7 +138,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	//Numero de vidas del jugador
 	private int nVidas;
 
-	private Sound pasos;
+	//private Sound pasos;
 	private int cycle, cycle_ant;
 	@Override
 	public void create () {
@@ -238,7 +242,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		cuentaTesoros = 0;
 
 		//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-		velocidadJugador = 2.5f;
+		velocidadJugador = 1.0f;
 
 		//Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
 		stateTimeNPC = 0f;
@@ -269,6 +273,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Imágenes de cada npc
 		imgNPC[0] = new Texture(Gdx.files.internal("sprite/npc/villano1.png"));
 		imgNPC[1] = new Texture(Gdx.files.internal("sprite/npc/villano2.png"));
+		imgNPC[2] = new Texture(Gdx.files.internal("sprite/npc/villano1.png"));
+		imgNPC[3] = new Texture(Gdx.files.internal("sprite/npc/villano2.png"));
+		imgNPC[4] = new Texture(Gdx.files.internal("sprite/npc/villano1.png"));
 
 		//Extraemos los frames de cada imagen en tmp[][]
 		for (int i = 0; i < numeroNPC; i++) {
@@ -297,6 +304,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		destino[0] = posicionaMapa(new Vector2(5, 2));
 		origen[1] = posicionaMapa(new Vector2(26, 17));
 		destino[1] = posicionaMapa(new Vector2(26, 3));
+		origen[2] = posicionaMapa(new Vector2(10, 7));
+		destino[2] = posicionaMapa(new Vector2(27, 7));
+		origen[3] = posicionaMapa(new Vector2(19, 16));
+		destino[3] = posicionaMapa(new Vector2(19, 4));
+		origen[4] = posicionaMapa(new Vector2(10, 15));
+		destino[4] = posicionaMapa(new Vector2(10, 5));
+
 		//POSICION INICIAL DE LOS NPC
 		for (int i = 0; i < numeroNPC; i++) {
 			posicionNPC[i] = new Vector2();
@@ -309,12 +323,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		//Inicializamos los sonidos
 		tesoroEncontrado = Gdx.audio.newSound(Gdx.files.internal("music/item.mp3"));
-		//pillado = Gdx.audio.newSound(Gdx.files.internal("music/lose_music.mp3"));
+		pillado = Gdx.audio.newSound(Gdx.files.internal("music/negative_beeps-6008.mp3"));
 		//fracaso = Gdx.audio.newSound(Gdx.files.internal("music/fin.mp3"));
 		//exito = Gdx.audio.newSound(Gdx.files.internal("music/exito.mp3"));
 
 		//Sonido de pasos
-		pasos = Gdx.audio.newSound(Gdx.files.internal("music/running-1-6846.mp3"));
+		//pasos = Gdx.audio.newSound(Gdx.files.internal("music/pasos.mp3"));
 		cycle = 0;
 		cycle_ant = 0;//Sirven para controlar los ciclos de reproduccion del sonido pasos
 
@@ -324,10 +338,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		cuentaTesoros = 0;
 		nVidas = 3;
+
 	}
 
 	@Override
 	public void render () {
+		fontTesoros.getData().setScale(0.5f, 0.5f);
+		fontVidas.getData().setScale(0.5f, 0.5f);
 		//ponemos a la escucha de eventos la propia clase del juego
 		Gdx.input.setInputProcessor(this);
 		//Centramos la camara en el jugador principal
@@ -356,6 +373,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Dibujamos las capas del mapa
 		//Posteriormente quitaremos la capa de profundidad para intercalar a los personajes
 		int[] capas = {0, 1, 2, 3};
+
 		mapaRenderer.render(capas);
 
 		//ANIMACION DEL JUGADOR
@@ -370,6 +388,24 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		//Inicializamos el objeto SpriteBatch
 		sb.begin();
+		GlyphLayout layout = new GlyphLayout(fontTesoros, "¡ENCUENTRA LOS 8 COFRES!");
+		float textWidth = layout.width;
+		float textHeight = layout.height;
+
+
+
+		if (mostrarTexto) {
+
+			fontTesoros.draw(sb, "¡ENCUENTRA LOS 8 COFRES!", camara.position.x - textWidth / 2, camara.position.y + textHeight / 2);
+
+			tiempoMostrandoTexto += Gdx.graphics.getDeltaTime();
+
+			// Si ha pasado el tiempo deseado, dejamos de mostrar el texto
+			if (tiempoMostrandoTexto >= 4f) {
+				mostrarTexto = false;
+				tiempoMostrandoTexto = 0f; // Reiniciamos el tiempo para futuras visualizaciones
+			}
+		}
 
 		//cuadroActual contendrá el frame que se va a mostrar en cada momento.
 		TextureRegion cuadroActual = jugador.getKeyFrame(stateTime);
@@ -415,13 +451,15 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		imgNPC[0].dispose();
 		imgNPC[1].dispose();
-		/*imgNPC[2].dispose();
+		imgNPC[2].dispose();
 		imgNPC[3].dispose();
-		imgNPC[4].dispose();*/
+		imgNPC[4].dispose();
 
 		//Music
 		musicaJuego.dispose();
-		pasos.dispose();
+		//pasos.dispose();
+		//exito.dispose();
+		tesoroEncontrado.dispose();
 
 		//Elementos para sobreimpresionar informacion
 		fontVidas.dispose();
@@ -469,10 +507,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		//Avanzamos el stateTime del jugador principal cuando hay algún estado de movimiento activo
 		if (izquierda || derecha || arriba || abajo) {
 			stateTime += Gdx.graphics.getDeltaTime();
-			cycle = (int) (stateTime / 0.6f);
+			/*cycle = (int) (stateTime / 0.6f);
 			if (cycle != cycle_ant)
 				pasos.play(0.5f);
-			cycle_ant = cycle;
+			cycle_ant = cycle;*/
 		}
 
 		//Limites en el mapa para el jugador
@@ -490,10 +528,16 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				GlyphLayout layout = new GlyphLayout(fontTesoros, "FIN DE LA PARTIDA");
 				float textWidth = layout.width;
 				float textHeight = layout.height;
-				if(totalTesoros == 8){
-					Thread.sleep(1000);
+				if(cuentaTesoros == 8){
+
+
 					sb.begin();
+					musicaJuego.pause();
+
 					fontTesoros.draw(sb, "FIN DE LA PARTIDA", camara.position.x - textWidth/ 2, camara.position.y - textHeight / 2 );
+
+					Thread.sleep(1000);
+
 					sb.end();
 				}
 			} catch (InterruptedException e) {
@@ -710,6 +754,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 					(float) (0.8 * anchoJugador), (float) (0.8 * altoJugador));
 			//Si hay colision
 			if (rJugador.overlaps(rNPC)) {
+				float posicionMusica = musicaJuego.getPosition();
+				musicaJuego.pause();
+				//reproducimos el sonido "pillado"
+				pillado.play();
 				//Código de fin de partida
 				if(nVidas == 1){
 					System.out.println("Fin de la partida.");
@@ -733,8 +781,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				}else{
 					nVidas = nVidas -1;
 					posicionJugador.set(posicionaMapa(celdaInicial));
+					musicaJuego.setPosition(posicionMusica);
+					//reanudamos la musica del juego
+					musicaJuego.play();
 					return; //Acabamos el bucle si hay una sola colisión
 				}
+
 
 			}
 		}//Si no hay colisión no se hace nada

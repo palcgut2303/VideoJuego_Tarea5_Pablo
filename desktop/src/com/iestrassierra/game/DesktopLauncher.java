@@ -11,6 +11,7 @@ public class DesktopLauncher {
 
 		config.setTitle("VideoJuego Pablo Alcudia");
 		config.setWindowedMode(897, 600);
+		config.setForegroundFPS(60);
 		new Lwjgl3Application(new MyGdxGame(), config);
 	}
 }
