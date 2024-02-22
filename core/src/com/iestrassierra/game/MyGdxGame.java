@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -236,13 +237,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		cuentaTesoros = 0;
 
 		//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-		velocidadJugador = 0.75f;
+		velocidadJugador = 1.2f;
 
 		//Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
 		stateTimeNPC = 0f;
 
 		//Velocidad de los NPC
-		velocidadNPC = 1.00f; //Vale cualquier múltiplo de 0.25f
+		velocidadNPC = 1.0f; //Vale cualquier múltiplo de 0.25f
 		//Creamos arrays de animaciones para los NPC
 		//Las animaciones activas
 		npc = new Animation[numeroNPC];
@@ -485,7 +486,13 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		if (celdaActual(posicionJugador).epsilonEquals(celdaFinal)) {
 			//Paralizamos el juego 1 segundo para reproducir algún efecto sonoro
 			try {
-				Thread.sleep(1000);
+				GlyphLayout layout = new GlyphLayout(fontTesoros, "FIN DE LA PARTIDA");
+				float textWidth = layout.width;
+				float textHeight = layout.height;
+				if(totalTesoros == 6){
+					Thread.sleep(1000);
+					fontTesoros.draw(sb, "FIN DE LA PARTIDA", camara.position.x - textWidth/ 2, camara.position.y - textHeight / 2 );
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
