@@ -182,6 +182,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				//contabilizamos cuántos tesoros se han incluido en el mapa
 				if (tesoro[x][y]) totalTesoros++;
 			}
+
 		}
 
 		//Posiciones inicial y final del recorrido
@@ -237,7 +238,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		cuentaTesoros = 0;
 
 		//Velocidad del jugador (puede hacerse un menú de configuración para cambiar la dificultad del juego)
-		velocidadJugador = 1.2f;
+		velocidadJugador = 2.5f;
 
 		//Ponemos a cero el atributo stateTimeNPC, que marca el tiempo de ejecución de los npc
 		stateTimeNPC = 0f;
@@ -489,9 +490,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				GlyphLayout layout = new GlyphLayout(fontTesoros, "FIN DE LA PARTIDA");
 				float textWidth = layout.width;
 				float textHeight = layout.height;
-				if(totalTesoros == 6){
+				if(totalTesoros == 8){
 					Thread.sleep(1000);
+					sb.begin();
 					fontTesoros.draw(sb, "FIN DE LA PARTIDA", camara.position.x - textWidth/ 2, camara.position.y - textHeight / 2 );
+					sb.end();
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -711,7 +714,21 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				if(nVidas == 1){
 					System.out.println("Fin de la partida.");
 					nVidas = 0;
-					posicionJugador.set(posicionaMapa(celdaFinal));
+					try {
+
+						GlyphLayout layout = new GlyphLayout(fontTesoros, "FIN DE LA PARTIDA");
+						float textWidth = layout.width;
+						float textHeight = layout.height;
+						fontTesoros.draw(sb, "FIN DE LA PARTIDA", camara.position.x - textWidth/ 2, camara.position.y - textHeight / 2 );
+						Thread.sleep(1000);
+
+						System.exit(0);
+
+
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+
 					return; //Acabamos el bucle si hay una sola colisión
 				}else{
 					nVidas = nVidas -1;
